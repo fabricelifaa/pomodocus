@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 256">
+  <g>  <g fill="none" stroke="#000" stroke-width="30" stroke-linecap="round">
+    <path d="M146.90,46.15 A84 84 0 0 1 209.85,109.10"/>
+    <path d="M209.85,146.90 A84 84 0 0 1 146.90,209.85"/>
+    <path d="M109.10,209.85 A84 84 0 0 1 46.15,146.90"/>
+    <path d="M46.15,109.10 A84 84 0 0 1 109.10,46.15"/>
+  </g>
+  <circle cx="128" cy="128" r="28" fill="#000"/></g>
+  <text x="270" y="162" font-family="Segoe UI" font-weight="700" font-size="112" letter-spacing="-3" fill="#000">pomodocus</text>
+</svg>

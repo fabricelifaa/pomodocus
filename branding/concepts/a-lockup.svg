@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 256">
+  <g>  <rect x="56" y="36" width="36" height="184" rx="18" fill="#000"/>
+  <path d="M138 54 A46 46 0 1 1 92 100" fill="none" stroke="#000" stroke-width="36" stroke-linecap="round"/>
+  <circle cx="138" cy="100" r="12" fill="#000"/></g>
+  <text x="270" y="162" font-family="Segoe UI" font-weight="700" font-size="112" letter-spacing="-3" fill="#000">pomodocus</text>
+</svg>

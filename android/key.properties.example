@@ -1,0 +1,7 @@
+# Copier ce fichier en "key.properties" (même dossier) et remplir.
+# key.properties et le .jks ne doivent JAMAIS être committés (déjà dans .gitignore).
+storePassword=MOT_DE_PASSE_DU_KEYSTORE
+keyPassword=MOT_DE_PASSE_DE_LA_CLE
+keyAlias=upload
+# Chemin absolu, avec des / même sous Windows
+storeFile=C:/Users/FABO/keys/pomodocus-upload.jks
