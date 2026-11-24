@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/theme/app_colors.dart';
+import '../../../core/providers.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../shared/widgets/stepper_tile.dart';
 import '../../focus/presentation/controllers/notification_permission_controller.dart';
@@ -145,7 +146,9 @@ class SettingsScreen extends ConsumerWidget {
             footer:
                 'Le décompte s’affiche en grand, téléphone à l’horizontale, '
                 'comme une vidéo. L’écran reste allumé ; touchez-le pour '
-                'afficher les commandes.',
+                'afficher les commandes. « Ne pas déranger » bloque les appels '
+                'et les notifications de messages, puis rétablit votre réglage '
+                'en quittant le plein écran.',
             children: [
               _SwitchTile(
                 title: 'Mode plein écran paysage',
@@ -163,11 +166,60 @@ class SettingsScreen extends ConsumerWidget {
                           ctl.update((s) => s.copyWith(fullscreenAutoOpen: v))
                     : null,
               ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: SegmentedButton<ClockStyle>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                        value: ClockStyle.digital,
+                        label: Text('Numérique'),
+                        icon: Icon(Icons.pin_rounded),
+                      ),
+                      ButtonSegment(
+                        value: ClockStyle.flip,
+                        label: Text('À volets'),
+                        icon: Icon(Icons.view_day_rounded),
+                      ),
+                    ],
+                    selected: {s.fullscreenClockStyle},
+                    onSelectionChanged: s.fullscreenEnabled
+                        ? (v) => ctl.update(
+                            (s) => s.copyWith(fullscreenClockStyle: v.first),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+              _SwitchTile(
+                title: 'Tic-tac à chaque seconde',
+                icon: Icons.av_timer_rounded,
+                value: s.fullscreenTickSound,
+                onChanged: s.fullscreenEnabled
+                    ? (v) =>
+                          ctl.update((s) => s.copyWith(fullscreenTickSound: v))
+                    : null,
+              ),
+              _DndTile(
+                enabled: s.fullscreenEnabled,
+                value: s.fullscreenDnd,
+                onChanged: (v) =>
+                    ctl.update((s) => s.copyWith(fullscreenDnd: v)),
+              ),
             ],
           ),
           const _Section(
             title: 'NOTIFICATIONS',
             children: [_NotificationTile()],
+          ),
+          const _Section(
+            title: 'RACCOURCIS',
+            footer:
+                'Appui long sur l’icône de Pomodocus : Démarrer un Pomodoro, '
+                'Plein écran ou Statistiques.',
+            children: [_ShortcutTiles()],
           ),
           _Section(
             title: 'APPLICATION',
@@ -305,4 +357,116 @@ class _SwitchTile extends StatelessWidget {
     value: value,
     onChanged: onChanged,
   );
+}
+
+/// "Ne pas déranger" switch, with the system access it needs.
+class _DndTile extends ConsumerStatefulWidget {
+  const _DndTile({
+    required this.enabled,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final bool enabled;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  ConsumerState<_DndTile> createState() => _DndTileState();
+}
+
+class _DndTileState extends ConsumerState<_DndTile> {
+  bool? _access;
+  late final AppLifecycleListener _lifecycle = AppLifecycleListener(
+    onResume: _check,
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle;
+    _check();
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
+
+  Future<void> _check() async {
+    final a = await ref.read(dndServiceProvider).hasAccess();
+    if (mounted) setState(() => _access = a);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final missing = widget.value && _access == false;
+    return Column(
+      children: [
+        SwitchListTile(
+          secondary: const Icon(Icons.do_not_disturb_on_rounded),
+          title: Text(
+            'Ne pas déranger en plein écran',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          subtitle: missing
+              ? const Text('Autorisation requise')
+              : const Text('Pas d’appel ni de notification de message'),
+          value: widget.value,
+          onChanged: widget.enabled ? widget.onChanged : null,
+        ),
+        if (missing && widget.enabled)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonal(
+                onPressed: () => ref.read(dndServiceProvider).requestAccess(),
+                child: const Text('Autoriser l’accès « Ne pas déranger »'),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _ShortcutTiles extends ConsumerWidget {
+  const _ShortcutTiles();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final home = ref.read(homeIntegrationProvider);
+    void hint(String text) =>
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(text)));
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.widgets_rounded),
+          title: const Text('Ajouter le widget à l’écran d’accueil'),
+          subtitle: const Text('Lance le minuteur en un geste'),
+          onTap: () async {
+            if (!await home.requestPinWidget()) {
+              hint('Appui long sur l’écran d’accueil → Widgets → Pomodocus.');
+            }
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.dashboard_customize_rounded),
+          title: const Text('Ajouter la tuile Réglages rapides'),
+          subtitle: const Text('Démarrez depuis le volet de notifications'),
+          onTap: () async {
+            if (!await home.requestAddTile()) {
+              hint(
+                'Ouvrez les Réglages rapides, touchez ✎ Modifier et faites '
+                'glisser la tuile Pomodocus.',
+              );
+            }
+          },
+        ),
+      ],
+    );
+  }
 }

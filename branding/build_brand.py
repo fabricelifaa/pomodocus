@@ -117,15 +117,15 @@ write("pomodocus-stacked-dark.svg", stacked(PAPER, "#A9ACB6", NIGHT))
 write(
     "app-icon.svg",
     svg(1024, 1024, f'<rect width="1024" height="1024" rx="0" fill="{PAPER}"/>'
-        + symbol_group(CORAL, TEAL, dx=512 - 128 * 2.75, dy=512 - 132 * 2.75, scale=2.75)),
+        + symbol_group(CORAL, TEAL, dx=512 - 128 * 3.05, dy=512 - 132 * 3.05, scale=3.05)),
 )
 write(
     "app-icon-foreground.svg",
-    svg(1024, 1024, symbol_group(CORAL, TEAL, dx=512 - 128 * 2.05, dy=512 - 132 * 2.05, scale=2.05)),
+    svg(1024, 1024, symbol_group(CORAL, TEAL, dx=512 - 128 * 2.3, dy=512 - 132 * 2.3, scale=2.3)),
 )
 write(
     "app-icon-monochrome.svg",
-    svg(1024, 1024, symbol_group("#000", "#000", dx=512 - 128 * 2.05, dy=512 - 132 * 2.05, scale=2.05)),
+    svg(1024, 1024, symbol_group("#000", "#000", dx=512 - 128 * 2.3, dy=512 - 132 * 2.3, scale=2.3)),
 )
 write(
     "splash.svg",

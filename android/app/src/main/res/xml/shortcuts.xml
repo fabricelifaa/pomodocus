@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Long press on the launcher icon. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_start"
+        android:shortcutId="start"
+        android:shortcutLongLabel="@string/shortcut_start_long"
+        android:shortcutShortLabel="@string/shortcut_start_short">
+        <intent
+            android:action="com.fab2dev.pomodocus.action.START"
+            android:targetClass="com.fab2dev.pomodocus.MainActivity"
+            android:targetPackage="com.fab2dev.pomodocus" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_fullscreen"
+        android:shortcutId="fullscreen"
+        android:shortcutLongLabel="@string/shortcut_fullscreen_long"
+        android:shortcutShortLabel="@string/shortcut_fullscreen_short">
+        <intent
+            android:action="com.fab2dev.pomodocus.action.FULLSCREEN"
+            android:targetClass="com.fab2dev.pomodocus.MainActivity"
+            android:targetPackage="com.fab2dev.pomodocus" />
+    </shortcut>
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_stats"
+        android:shortcutId="stats"
+        android:shortcutLongLabel="@string/shortcut_stats_long"
+        android:shortcutShortLabel="@string/shortcut_stats_short">
+        <intent
+            android:action="com.fab2dev.pomodocus.action.STATS"
+            android:targetClass="com.fab2dev.pomodocus.MainActivity"
+            android:targetPackage="com.fab2dev.pomodocus" />
+    </shortcut>
+</shortcuts>

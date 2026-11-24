@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/providers.dart';
 import '../../shared/widgets/motion.dart';
 import '../../features/focus/presentation/screens/fullscreen_timer_screen.dart';
+import '../../features/splash/splash_screen.dart';
 import 'app_modules.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -12,8 +13,19 @@ final routerProvider = Provider<GoRouter>((ref) {
   // active timer screen stable while the app is in use.
   final modules = enabledModules(ref.read(remoteConfigProvider));
   final router = GoRouter(
-    initialLocation: '/focus',
+    initialLocation: ref.read(showSplashProvider)
+        ? SplashScreen.path
+        : '/focus',
     routes: [
+      GoRoute(
+        path: SplashScreen.path,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const SplashScreen(),
+          transitionDuration: Duration.zero,
+          reverseTransitionDuration: Duration.zero,
+          transitionsBuilder: (_, _, _, child) => child,
+        ),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) =>
             AppShell(shell: shell, modules: modules),

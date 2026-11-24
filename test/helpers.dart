@@ -3,8 +3,11 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodocus/core/providers.dart';
 import 'package:pomodocus/core/services/display_mode_service.dart';
+import 'package:pomodocus/core/services/dnd_service.dart';
 import 'package:pomodocus/core/services/feedback_services.dart';
+import 'package:pomodocus/core/services/home_integration_service.dart';
 import 'package:pomodocus/core/services/notification_service.dart';
+import 'package:pomodocus/core/services/tick_sound_service.dart';
 import 'package:pomodocus/core/services/update_service.dart';
 import 'package:pomodocus/core/utils/clock.dart';
 import 'package:pomodocus/features/focus/domain/entities/focus_session.dart';
@@ -59,6 +62,12 @@ class TestDeps {
   final notifications = NoopNotificationService();
   final sound = NoopSoundService();
   final display = NoopDisplayModeService();
+  final ticks = NoopTickSoundService();
+  final dnd = FakeDndService();
+  final home = FakeHomeIntegrationService();
+
+  /// Off by default so tests land directly on the Focus screen.
+  bool splash = false;
 
   List get overrides => [
     sharedPreferencesProvider.overrideWithValue(prefs),
@@ -69,6 +78,11 @@ class TestDeps {
     hapticsServiceProvider.overrideWithValue(NoopHapticsService()),
     updateServiceProvider.overrideWithValue(FakeUpdateService()),
     displayModeServiceProvider.overrideWithValue(display),
+    tickSoundServiceProvider.overrideWithValue(ticks),
+    dndServiceProvider.overrideWithValue(dnd),
+    homeIntegrationProvider.overrideWithValue(home),
+    initialLaunchActionProvider.overrideWithValue(home.initial),
+    showSplashProvider.overrideWithValue(splash),
   ];
 
   ProviderContainer container() =>

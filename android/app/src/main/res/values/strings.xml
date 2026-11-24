@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_description">Lancez un Pomodoro et suivez le décompte</string>
+    <string name="widget_default_label">Concentration</string>
+    <string name="widget_default_time" translatable="false">25:00</string>
+    <string name="tile_label">Pomodoro</string>
+    <string name="shortcut_start_short">Démarrer</string>
+    <string name="shortcut_start_long">Démarrer un Pomodoro</string>
+    <string name="shortcut_fullscreen_short">Plein écran</string>
+    <string name="shortcut_fullscreen_long">Pomodoro en plein écran</string>
+    <string name="shortcut_stats_short">Statistiques</string>
+    <string name="shortcut_stats_long">Voir mes statistiques</string>
+</resources>

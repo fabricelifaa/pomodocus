@@ -28,6 +28,31 @@ allumé et le décompte occupe tout l'écran (fond sombre). Toucher l'écran aff
 chiffre se décale très légèrement chaque minute pour éviter le marquage des écrans OLED. Le reste de
 l'application est verrouillé en portrait.
 
+Boutons en haut à droite du plein écran (également dans Paramètres → Plein écran) :
+- **Horloge numérique / à volets** (flip clock) ; chacune a son tic-tac (`assets/sounds/tick_*.wav`).
+- **Tic-tac** à chaque seconde, coupable. Il se mixe avec la musique sans la mettre en pause.
+- **Ne pas déranger** : bloque les appels et les notifications de messages (alarmes et médias passent).
+  Nécessite l'accès « Ne pas déranger » accordé une fois dans les réglages Android. Le réglage
+  habituel de l'utilisateur est sauvegardé puis rétabli en quittant le plein écran, ou au lancement
+  suivant si l'app a été tuée entre-temps (`DndController.kt`).
+
+## Splash, widget, tuile et raccourcis (Android)
+
+- **Splash animé** de 3 s (`lib/features/splash/`) après le splash natif : logo en Lottie
+  (`assets/lottie/logo_reveal.json`), nom et slogan. Un toucher le passe ; il est sauté quand l'app
+  est ouverte depuis le widget, la tuile ou un raccourci.
+- **Widget d'écran d'accueil** (`TimerWidgetProvider.kt`) : session en cours et décompte en direct
+  (Chronometer, sans réveiller l'app). Bouton ▶ : démarre ou reprend ; pendant une session, ouvre le
+  plein écran.
+- **Tuile Réglages rapides** (`PomodoroTileService.kt`) : démarre un Pomodoro, ou ouvre le décompte
+  s'il tourne (sous-titre « Fin à 10:25 »).
+- **Raccourcis** (appui long sur l'icône, `res/xml/shortcuts.xml`) : Démarrer, Plein écran,
+  Statistiques.
+- Paramètres → Raccourcis : ajout du widget et de la tuile en un geste (selon le lanceur / Android 13+).
+
+L'app publie l'état du minuteur vers Android à chaque changement (`home_integration_service.dart`) ;
+les actions arrivent par le canal `com.fab2dev.pomodocus/home`.
+
 ## Architecture (feature-first)
 
 ```

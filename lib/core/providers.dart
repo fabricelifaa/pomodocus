@@ -9,7 +9,10 @@ import '../features/focus/domain/repositories/repositories.dart';
 import '../features/settings/data/settings_repository.dart';
 import 'config/remote_config_service.dart';
 import 'services/display_mode_service.dart';
+import 'services/dnd_service.dart';
 import 'services/feedback_services.dart';
+import 'services/home_integration_service.dart';
+import 'services/tick_sound_service.dart';
 import 'services/notification_service.dart';
 import 'services/update_service.dart';
 import 'storage/app_database.dart';
@@ -59,6 +62,27 @@ final hapticsServiceProvider = Provider<HapticsService>(
 
 final displayModeServiceProvider = Provider<DisplayModeService>(
   (ref) => SystemDisplayModeService(),
+);
+
+final tickSoundServiceProvider = Provider<TickSoundService>((ref) {
+  final s = AssetTickSoundService();
+  ref.onDispose(s.dispose);
+  return s;
+});
+
+final dndServiceProvider = Provider<DndService>((ref) => PlatformDndService());
+
+final homeIntegrationProvider = Provider<HomeIntegrationService>(
+  (ref) => PlatformHomeIntegrationService(),
+);
+
+/// Action that launched the app (widget, tile, shortcut), read in bootstrap.
+final initialLaunchActionProvider = Provider<LaunchAction?>((ref) => null);
+
+/// Animated splash at launch. Skipped when the app is opened from a widget,
+/// a tile or a shortcut: the user wants the timer right away.
+final showSplashProvider = Provider<bool>(
+  (ref) => ref.watch(initialLaunchActionProvider) == null,
 );
 
 final updateServiceProvider = Provider<UpdateService>(

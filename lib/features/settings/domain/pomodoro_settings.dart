@@ -9,6 +9,17 @@ enum AppThemePreference {
       .firstWhere((e) => e.name == n, orElse: () => AppThemePreference.system);
 }
 
+/// Look of the full-screen countdown.
+enum ClockStyle {
+  digital,
+  flip;
+
+  static ClockStyle fromName(String? n) => ClockStyle.values.firstWhere(
+    (e) => e.name == n,
+    orElse: () => ClockStyle.digital,
+  );
+}
+
 /// Bounds used to validate every duration setting.
 abstract final class SettingsBounds {
   static const focusMin = 1, focusMax = 120;
@@ -30,6 +41,9 @@ class PomodoroSettings {
     this.themeMode = AppThemePreference.system,
     this.fullscreenEnabled = true,
     this.fullscreenAutoOpen = false,
+    this.fullscreenClockStyle = ClockStyle.digital,
+    this.fullscreenTickSound = true,
+    this.fullscreenDnd = true,
   });
 
   final int focusDurationMinutes;
@@ -47,6 +61,15 @@ class PomodoroSettings {
 
   /// Opens the full-screen countdown automatically when a session starts.
   final bool fullscreenAutoOpen;
+
+  /// Digital digits or flip-clock cards in full screen.
+  final ClockStyle fullscreenClockStyle;
+
+  /// Plays a tick each second in full screen (sound matches the clock style).
+  final bool fullscreenTickSound;
+
+  /// Turns on Do Not Disturb (no calls, no messages) while in full screen.
+  final bool fullscreenDnd;
 
   static const defaults = PomodoroSettings();
 
@@ -88,6 +111,9 @@ class PomodoroSettings {
     AppThemePreference? themeMode,
     bool? fullscreenEnabled,
     bool? fullscreenAutoOpen,
+    ClockStyle? fullscreenClockStyle,
+    bool? fullscreenTickSound,
+    bool? fullscreenDnd,
   }) => PomodoroSettings(
     focusDurationMinutes: focusDurationMinutes ?? this.focusDurationMinutes,
     shortBreakMinutes: shortBreakMinutes ?? this.shortBreakMinutes,
@@ -100,6 +126,9 @@ class PomodoroSettings {
     themeMode: themeMode ?? this.themeMode,
     fullscreenEnabled: fullscreenEnabled ?? this.fullscreenEnabled,
     fullscreenAutoOpen: fullscreenAutoOpen ?? this.fullscreenAutoOpen,
+    fullscreenClockStyle: fullscreenClockStyle ?? this.fullscreenClockStyle,
+    fullscreenTickSound: fullscreenTickSound ?? this.fullscreenTickSound,
+    fullscreenDnd: fullscreenDnd ?? this.fullscreenDnd,
   );
 
   Map<String, Object?> toJson() => {
@@ -114,6 +143,9 @@ class PomodoroSettings {
     'themeMode': themeMode.name,
     'fullscreenEnabled': fullscreenEnabled,
     'fullscreenAutoOpen': fullscreenAutoOpen,
+    'fullscreenClockStyle': fullscreenClockStyle.name,
+    'fullscreenTickSound': fullscreenTickSound,
+    'fullscreenDnd': fullscreenDnd,
   };
 
   factory PomodoroSettings.fromJson(Map<String, Object?> j) {
@@ -132,6 +164,11 @@ class PomodoroSettings {
       themeMode: AppThemePreference.fromName(j['themeMode'] as String?),
       fullscreenEnabled: b('fullscreenEnabled', d.fullscreenEnabled),
       fullscreenAutoOpen: b('fullscreenAutoOpen', d.fullscreenAutoOpen),
+      fullscreenClockStyle: ClockStyle.fromName(
+        j['fullscreenClockStyle'] as String?,
+      ),
+      fullscreenTickSound: b('fullscreenTickSound', d.fullscreenTickSound),
+      fullscreenDnd: b('fullscreenDnd', d.fullscreenDnd),
     ).validated();
   }
 

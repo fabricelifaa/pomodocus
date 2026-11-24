@@ -44,15 +44,18 @@ void main() {
     Future<void> Function(TestDeps)? act,
     bool seed = false,
     Size size = const Size(1179, 2556),
+    String settings = '',
+    bool splash = false,
+    Duration finalSettle = const Duration(milliseconds: 1500),
   }) async {
     SharedPreferences.setMockInitialValues({
-      SettingsRepository.key: '{"themeMode":"$theme"}',
+      SettingsRepository.key: '{"themeMode":"$theme"$settings}',
       SettingsRepository.notificationPromptKey: true,
     });
     final deps = TestDeps(
       await SharedPreferences.getInstance(),
       now: DateTime(2026, 11, 24, 16, 20),
-    );
+    )..splash = splash;
     if (seed) {
       var i = 0;
       for (final (d, n) in [
@@ -106,7 +109,7 @@ void main() {
     );
     await settle(tester, const Duration(seconds: 1));
     if (act != null) await act(deps);
-    await settle(tester, const Duration(milliseconds: 1500));
+    await settle(tester, finalSettle);
     await expectLater(
       find.byType(PomodocusApp),
       matchesGoldenFile('goldens/$name.png'),
@@ -115,6 +118,50 @@ void main() {
   }
 
   testWidgets('focus idle light', (t) => shoot(t, 'focus_idle_light'));
+  testWidgets(
+    'splash light',
+    (t) => shoot(t, 'splash_light', splash: true),
+  );
+  testWidgets(
+    'splash dark',
+    (t) => shoot(t, 'splash_dark', theme: 'dark', splash: true),
+  );
+  testWidgets('fullscreen flip clock', (t) async {
+    await shoot(
+      t,
+      'fullscreen_flip',
+      size: const Size(2556, 1179),
+      settings: ',"fullscreenClockStyle":"flip"',
+      act: (d) async {
+        await t.tap(find.byTooltip('Plein écran'));
+        await settle(t, const Duration(milliseconds: 600));
+        await t.tap(find.text('Démarrer'));
+        await settle(t, const Duration(milliseconds: 400));
+        d.clock.advance(const Duration(minutes: 7, seconds: 41));
+        await settle(t, const Duration(milliseconds: 1200));
+      },
+    );
+  });
+  testWidgets('fullscreen flip clock mid-flip', (t) async {
+    await shoot(
+      t,
+      'fullscreen_flip_mid',
+      size: const Size(2556, 1179),
+      settings: ',"fullscreenClockStyle":"flip"',
+      finalSettle: Duration.zero,
+      act: (d) async {
+        await t.tap(find.byTooltip('Plein écran'));
+        await settle(t, const Duration(milliseconds: 600));
+        await t.tap(find.text('Démarrer'));
+        await settle(t, const Duration(seconds: 5));
+        d.clock.advance(const Duration(minutes: 7, seconds: 40));
+        await settle(t, const Duration(milliseconds: 1200));
+        d.clock.advance(const Duration(seconds: 1));
+        await t.pump(const Duration(milliseconds: 250));
+        await t.pump(const Duration(milliseconds: 90));
+      },
+    );
+  });
   testWidgets(
     'focus idle dark',
     (t) => shoot(t, 'focus_idle_dark', theme: 'dark'),
