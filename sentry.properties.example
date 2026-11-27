@@ -1,0 +1,11 @@
+# Copier en `sentry.properties` (ignoré par git) pour envoyer les symboles de
+# débogage (dSYM iOS, symboles Android) depuis votre poste :
+#   dart run sentry_dart_plugin
+# En CI, utiliser plutôt les variables SENTRY_ORG, SENTRY_PROJECT et SENTRY_AUTH_TOKEN.
+
+# Slug de l'organisation (URL : https://<org>.sentry.io)
+org=
+# Slug du projet Sentry
+project=
+# Sentry → Settings → Auth Tokens (scope project:releases / org:ci). Secret.
+auth_token=

@@ -145,7 +145,9 @@ class SettingsScreen extends ConsumerWidget {
             title: 'PLEIN ÉCRAN',
             footer:
                 'Le décompte s’affiche en grand, téléphone à l’horizontale, '
-                'comme une vidéo. L’écran reste allumé ; touchez-le pour '
+                'comme une vidéo. Tournez le téléphone sur l’écran Focus pour '
+                'l’ouvrir, redressez-le pour le fermer. L’écran reste '
+                'allumé ; touchez-le pour '
                 'afficher les commandes. « Ne pas déranger » bloque les appels '
                 'et les notifications de messages, puis rétablit votre réglage '
                 'en quittant le plein écran.',
@@ -164,6 +166,15 @@ class SettingsScreen extends ConsumerWidget {
                 onChanged: s.fullscreenEnabled
                     ? (v) =>
                           ctl.update((s) => s.copyWith(fullscreenAutoOpen: v))
+                    : null,
+              ),
+              _SwitchTile(
+                title: 'Plein écran en tournant le téléphone',
+                icon: Icons.screen_rotation_alt_rounded,
+                value: s.fullscreenEnabled && s.fullscreenOnRotate,
+                onChanged: s.fullscreenEnabled
+                    ? (v) =>
+                          ctl.update((s) => s.copyWith(fullscreenOnRotate: v))
                     : null,
               ),
               Padding(

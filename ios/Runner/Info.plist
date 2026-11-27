@@ -47,6 +47,8 @@
 				</array>
 			</dict>
 		</dict>
+		<key>NSMotionUsageDescription</key>
+		<string>Pomodocus détecte quand vous tournez le téléphone pour afficher le minuteur en plein écran.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UILaunchStoryboardName</key>

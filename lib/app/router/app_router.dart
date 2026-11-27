@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../../core/providers.dart';
 import '../../shared/widgets/motion.dart';
@@ -13,6 +14,8 @@ final routerProvider = Provider<GoRouter>((ref) {
   // active timer screen stable while the app is in use.
   final modules = enabledModules(ref.read(remoteConfigProvider));
   final router = GoRouter(
+    // Navigation breadcrumbs in Sentry reports (no-op when Sentry is off).
+    observers: [SentryNavigatorObserver()],
     initialLocation: ref.read(showSplashProvider)
         ? SplashScreen.path
         : '/focus',
@@ -20,6 +23,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: SplashScreen.path,
         pageBuilder: (context, state) => CustomTransitionPage(
+          name: state.uri.path,
           child: const SplashScreen(),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
@@ -36,7 +40,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 GoRoute(
                   path: m.path,
                   pageBuilder: (context, state) =>
-                      NoTransitionPage(child: m.builder(context)),
+                      NoTransitionPage(name: m.path, child: m.builder(context)),
                   routes: m.routes,
                 ),
               ],
@@ -47,6 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: FullscreenTimerScreen.path,
         pageBuilder: (context, state) => CustomTransitionPage(
+          name: state.uri.path,
           child: const FullscreenTimerScreen(),
           transitionDuration: const Duration(milliseconds: 350),
           reverseTransitionDuration: const Duration(milliseconds: 250),

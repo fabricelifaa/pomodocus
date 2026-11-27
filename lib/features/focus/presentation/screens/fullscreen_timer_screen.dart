@@ -9,6 +9,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_theme.dart';
 import '../../../../app/theme/app_typography.dart';
 import '../../../../core/providers.dart';
+import '../../../../core/services/device_orientation_service.dart';
 import '../../../../core/services/display_mode_service.dart';
 import '../../../../core/services/dnd_service.dart';
 import '../../../../core/utils/formatters.dart';
@@ -19,6 +20,7 @@ import '../../domain/entities/active_timer_state.dart';
 import '../../domain/entities/session_type.dart';
 import '../controllers/timer_controller.dart';
 import '../focus_actions.dart';
+import '../rotation_aware.dart';
 import '../widgets/flip_clock.dart';
 import '../widgets/focus_controls.dart';
 
@@ -37,7 +39,7 @@ class FullscreenTimerScreen extends ConsumerStatefulWidget {
 }
 
 class _FullscreenTimerScreenState extends ConsumerState<FullscreenTimerScreen>
-    with WidgetsBindingObserver {
+    with WidgetsBindingObserver, RotationAware<FullscreenTimerScreen> {
   static const _hideAfter = Duration(seconds: 4);
 
   late final DisplayModeService _display = ref.read(displayModeServiceProvider);
@@ -45,6 +47,28 @@ class _FullscreenTimerScreenState extends ConsumerState<FullscreenTimerScreen>
   bool _controlsVisible = true;
   bool _dndActive = false;
   Timer? _hideTimer;
+
+  /// The phone has been seen sideways since this screen opened. Only then
+  /// does turning it upright close the full screen: opened with the button
+  /// while held upright, it stays open until the user turns the phone.
+  bool _seenLandscape = false;
+  bool _leaving = false;
+
+  @override
+  void onPhysicalOrientation(PhysicalOrientation o) {
+    switch (o) {
+      case PhysicalOrientation.landscape:
+        _seenLandscape = true;
+      case PhysicalOrientation.portrait:
+        if (!_seenLandscape || _leaving) return;
+        // Close an open dialog (DND explanation) along with the screen.
+        Navigator.of(
+          context,
+          rootNavigator: true,
+        ).popUntil((r) => r is! PopupRoute);
+        _exit();
+    }
+  }
 
   @override
   void initState() {
@@ -150,6 +174,8 @@ class _FullscreenTimerScreenState extends ConsumerState<FullscreenTimerScreen>
   }
 
   void _exit() {
+    if (_leaving) return;
+    _leaving = true;
     if (context.canPop()) {
       context.pop();
     } else {

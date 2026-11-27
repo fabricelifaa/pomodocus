@@ -7,6 +7,7 @@ import 'package:lottie/lottie.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_typography.dart';
+import '../../../../core/services/device_orientation_service.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../shared/widgets/motion.dart';
@@ -17,6 +18,7 @@ import '../../domain/entities/session_type.dart';
 import '../controllers/notification_permission_controller.dart';
 import '../focus_actions.dart';
 import '../controllers/timer_controller.dart';
+import '../rotation_aware.dart';
 import '../widgets/focus_controls.dart';
 import '../widgets/progress_ring.dart';
 import '../widgets/quick_durations_sheet.dart';
@@ -29,7 +31,8 @@ class FocusScreen extends ConsumerStatefulWidget {
   ConsumerState<FocusScreen> createState() => _FocusScreenState();
 }
 
-class _FocusScreenState extends ConsumerState<FocusScreen> {
+class _FocusScreenState extends ConsumerState<FocusScreen>
+    with RotationAware<FocusScreen> {
   int _celebrationKey = 0;
   bool _celebrating = false;
 
@@ -55,6 +58,21 @@ class _FocusScreenState extends ConsumerState<FocusScreen> {
       GoRouterState.of(context).uri.path == FullscreenTimerScreen.path;
 
   void _openFullscreen() => context.push(FullscreenTimerScreen.path);
+
+  /// Phone turned sideways on the Focus tab: switch to the full-screen
+  /// countdown, like a video player. Turning it upright closes it (handled
+  /// by the full-screen screen). Leaving full screen with the button while
+  /// still sideways does not reopen it: the next turn to landscape does.
+  @override
+  void onPhysicalOrientation(PhysicalOrientation o) {
+    if (o != PhysicalOrientation.landscape) return;
+    final path = GoRouter.of(context)
+        .routerDelegate
+        .currentConfiguration
+        .uri
+        .path;
+    if (path == '/focus' && isTopmost) _openFullscreen();
+  }
 
   Future<void> _onPrimary(ActiveTimerState t) async {
     final wasIdle = t.isIdle;

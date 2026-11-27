@@ -1,7 +1,7 @@
 name: pomodocus
 description: "Pomodocus — Focus. Work. Repeat. Focus on what matters."
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.2+3
 
 environment:
   sdk: ^3.13.7
@@ -26,6 +26,8 @@ dependencies:
   timezone: ^0.11.2
   uuid: ^4.6.0
   wakelock_plus: ^1.8.2
+  sentry_flutter: ^10.7.0
+  sensors_plus: ^7.1.1
 
 dev_dependencies:
   flutter_test:
@@ -35,6 +37,7 @@ dev_dependencies:
   drift_dev: ^2.35.3
   flutter_launcher_icons: ^0.14.4
   flutter_native_splash: ^2.4.8
+  sentry_dart_plugin: ^3.6.0
 
 flutter:
   uses-material-design: true
@@ -77,3 +80,12 @@ flutter_native_splash:
   ios: true
   android: true
   web: false
+
+# Envoi des symboles de débogage vers Sentry : `dart run sentry_dart_plugin`
+# après une build release. org / project / auth_token : sentry.properties ou
+# variables SENTRY_ORG / SENTRY_PROJECT / SENTRY_AUTH_TOKEN (jamais ici).
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: false
+  upload_sources: false
+  ignore_missing: true

@@ -41,6 +41,7 @@ class PomodoroSettings {
     this.themeMode = AppThemePreference.system,
     this.fullscreenEnabled = true,
     this.fullscreenAutoOpen = false,
+    this.fullscreenOnRotate = true,
     this.fullscreenClockStyle = ClockStyle.digital,
     this.fullscreenTickSound = true,
     this.fullscreenDnd = true,
@@ -61,6 +62,10 @@ class PomodoroSettings {
 
   /// Opens the full-screen countdown automatically when a session starts.
   final bool fullscreenAutoOpen;
+
+  /// Opens the full-screen countdown when the phone is turned sideways on the
+  /// Focus screen, and closes it when the phone is turned upright again.
+  final bool fullscreenOnRotate;
 
   /// Digital digits or flip-clock cards in full screen.
   final ClockStyle fullscreenClockStyle;
@@ -111,6 +116,7 @@ class PomodoroSettings {
     AppThemePreference? themeMode,
     bool? fullscreenEnabled,
     bool? fullscreenAutoOpen,
+    bool? fullscreenOnRotate,
     ClockStyle? fullscreenClockStyle,
     bool? fullscreenTickSound,
     bool? fullscreenDnd,
@@ -126,6 +132,7 @@ class PomodoroSettings {
     themeMode: themeMode ?? this.themeMode,
     fullscreenEnabled: fullscreenEnabled ?? this.fullscreenEnabled,
     fullscreenAutoOpen: fullscreenAutoOpen ?? this.fullscreenAutoOpen,
+    fullscreenOnRotate: fullscreenOnRotate ?? this.fullscreenOnRotate,
     fullscreenClockStyle: fullscreenClockStyle ?? this.fullscreenClockStyle,
     fullscreenTickSound: fullscreenTickSound ?? this.fullscreenTickSound,
     fullscreenDnd: fullscreenDnd ?? this.fullscreenDnd,
@@ -143,6 +150,7 @@ class PomodoroSettings {
     'themeMode': themeMode.name,
     'fullscreenEnabled': fullscreenEnabled,
     'fullscreenAutoOpen': fullscreenAutoOpen,
+    'fullscreenOnRotate': fullscreenOnRotate,
     'fullscreenClockStyle': fullscreenClockStyle.name,
     'fullscreenTickSound': fullscreenTickSound,
     'fullscreenDnd': fullscreenDnd,
@@ -164,6 +172,7 @@ class PomodoroSettings {
       themeMode: AppThemePreference.fromName(j['themeMode'] as String?),
       fullscreenEnabled: b('fullscreenEnabled', d.fullscreenEnabled),
       fullscreenAutoOpen: b('fullscreenAutoOpen', d.fullscreenAutoOpen),
+      fullscreenOnRotate: b('fullscreenOnRotate', d.fullscreenOnRotate),
       fullscreenClockStyle: ClockStyle.fromName(
         j['fullscreenClockStyle'] as String?,
       ),

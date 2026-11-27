@@ -53,3 +53,9 @@ android/key.properties
 *.jks
 
 Pomodocus_Cahier_des_charges_Flutter.md
+
+# Sentry / environnement (secrets locaux)
+.env
+.env.*
+!.env.example
+sentry.properties

@@ -102,7 +102,62 @@ backend, implémenter `RemoteConfigSource.fetch()` et l'injecter dans `remoteCon
 Les modules de navigation sont déclarés dans `lib/app/router/app_modules.dart` ; un module avec un
 `flag` n'apparaît que si le flag est vrai. Les flags ne sont pas un mécanisme de sécurité.
 
-## 4. iOS
+## 4. iOS avec Codemagic
 
-Le code est prêt pour iOS, mais la build signée nécessite macOS + Xcode (certificats, profils).
-Sur Mac : `flutter build ipa` ou `shorebird release ios`.
+### Build de test non signée (`ios-unsigned`)
+
+Aucun prérequis Apple côté Codemagic. Lancer le workflow, télécharger l'artefact
+`pomodocus-<version>-ios-unsigned.ipa`, puis l'installer avec **Sideloadly** (Windows) : brancher
+l'iPhone en USB, glisser l'IPA, se connecter avec son Apple ID (un compte gratuit suffit). Sur
+l'iPhone : Réglages → Général → VPN et gestion de l'appareil → faire confiance au profil, et activer
+le Mode développeur (Réglages → Confidentialité et sécurité). Avec un Apple ID gratuit, l'app
+expire au bout de 7 jours : il suffit de la réinstaller.
+
+### Build signée TestFlight (`ios-release`)
+
+La build signée iOS se fait sur Codemagic (`codemagic.yaml`, workflow `ios-release`) : analyse,
+tests, build IPA signée, envoi des dSYM à Sentry, puis envoi sur TestFlight.
+
+À configurer une seule fois :
+
+1. **App Store Connect** : créer l'app avec le bundle id `com.fab2dev.pomodocus`, puis noter son
+   « Identifiant Apple » (Informations générales) et le reporter dans `APP_STORE_APPLE_ID` du
+   `codemagic.yaml`.
+2. **Clé API** : App Store Connect → Utilisateurs et accès → Intégrations → clé avec le rôle
+   *App Manager*. L'ajouter dans Codemagic (Team settings → Integrations → Developer Portal) sous le
+   nom `Pomodocus ASC`, ou adapter `integrations.app_store_connect`.
+3. **Certificat de distribution** : Team settings → codemagic.yaml settings → Code signing
+   identities → générer ou importer un certificat *Apple Distribution*. Le profil App Store est
+   ensuite récupéré ou créé automatiquement (`ios_signing`).
+4. **Variables Sentry** : dans l'app Codemagic → Environment variables, créer le groupe `sentry`
+   avec `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_ORG`,
+   `SENTRY_PROJECT` et `SENTRY_AUTH_TOKEN` (cocher *Secret*).
+
+Le numéro de build est calculé automatiquement (dernier build TestFlight + 1) ; la version vient du
+`pubspec.yaml`. Les builds se lancent à la main, ou à chaque tag `v*` si le bloc `triggering` est
+décommenté.
+
+Pour une release Shorebird (patchs OTA sur iOS), remplacer l'étape « Build IPA » par
+`shorebird release ios -- --dart-define-from-file=.env --build-number=$BUILD_NUMBER` après
+`shorebird init` (voir la doc Codemagic × Shorebird ; jeton `SHOREBIRD_TOKEN` requis).
+
+## 5. Sentry (suivi des bugs)
+
+`sentry_flutter` est initialisé dans `lib/bootstrap.dart` à partir de valeurs passées à la
+compilation (`lib/core/config/sentry_config.dart`). **Sans `SENTRY_DSN`, Sentry n'est pas démarré** :
+le dev local et les tests fonctionnent sans configuration.
+
+```bash
+cp .env.example .env                 # puis renseigner SENTRY_DSN (ignoré par git)
+flutter run --dart-define-from-file=.env
+flutter build appbundle --release --dart-define-from-file=.env
+shorebird release android -- --dart-define-from-file=.env   # et idem pour chaque patch
+```
+
+Envoi des symboles de débogage (traces lisibles pour les crashs natifs) après une build release :
+copier `sentry.properties.example` en `sentry.properties` (ignoré par git), renseigner `org`,
+`project` et `auth_token`, puis `dart run sentry_dart_plugin`. Le jeton d'API ne va **jamais** dans
+`.env` : tout ce fichier est compilé dans l'app.
+
+Aucune donnée personnelle n'est envoyée (`sendDefaultPii = false`). Les rapports contiennent le
+fil de navigation (écrans visités).

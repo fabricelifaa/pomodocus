@@ -1,0 +1,162 @@
+# Codemagic — builds iOS.
+#   ios-unsigned : IPA non signé, à installer via Sideloadly / AltStore (tests).
+#   ios-release  : build signée et envoi sur TestFlight.
+# Prérequis côté Codemagic : voir docs/RELEASING.md § 4.
+workflows:
+  ios-unsigned:
+    name: iOS — IPA non signé (test)
+    instance_type: mac_mini_m2
+    max_build_duration: 45
+    environment:
+      flutter: 3.47.8
+      xcode: latest
+      cocoapods: default
+      # Facultatif : crée un groupe « sentry » avec SENTRY_DSN pour tester
+      # Sentry, puis décommente les deux lignes ci-dessous.
+      # groups:
+      #   - sentry
+    scripts:
+      - name: Dépendances
+        script: flutter pub get
+
+      - name: Fichier .env (Sentry)
+        script: |
+          cat > .env <<EOF
+          SENTRY_DSN=${SENTRY_DSN:-}
+          SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-development}
+          SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0}
+          EOF
+
+      - name: Build iOS sans signature
+        script: |
+          flutter build ios --release --no-codesign \
+            --dart-define-from-file=.env
+
+      - name: Emballage en .ipa
+        script: |
+          set -e
+          VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version: *//; s/\+.*//')
+          mkdir -p build/ios/unsigned/Payload
+          cp -R build/ios/iphoneos/Runner.app build/ios/unsigned/Payload/
+          cd build/ios/unsigned
+          zip -qr "pomodocus-$VERSION-ios-unsigned.ipa" Payload
+          ls -lh *.ipa
+
+    artifacts:
+      - build/ios/unsigned/*.ipa
+
+  ios-release:
+    name: iOS — TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    # Clé API App Store Connect ajoutée dans Codemagic :
+    # Team settings → Integrations → Developer Portal → Manage keys.
+    # Remplacer par le nom exact donné à la clé.
+    integrations:
+      app_store_connect: Pomodocus ASC
+
+    environment:
+      flutter: 3.47.8
+      xcode: latest
+      cocoapods: default
+      # Groupe de variables créé dans l'app Codemagic → Environment variables.
+      # Variables attendues (cocher « Secret » pour SENTRY_AUTH_TOKEN) :
+      #   SENTRY_DSN, SENTRY_ENVIRONMENT, SENTRY_TRACES_SAMPLE_RATE
+      #   SENTRY_ORG, SENTRY_PROJECT, SENTRY_AUTH_TOKEN (envoi des dSYM)
+      groups:
+        - sentry
+      # Certificat et profil App Store récupérés (ou créés) automatiquement
+      # via la clé API. Le certificat de distribution doit être importé dans
+      # Team settings → codemagic.yaml settings → Code signing identities.
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.fab2dev.pomodocus
+      vars:
+        BUNDLE_ID: com.fab2dev.pomodocus
+        # Apple ID de l'app : App Store Connect → l'app → Informations
+        # générales → « Identifiant Apple » (nombre à 10 chiffres).
+        APP_STORE_APPLE_ID: 0000000000
+
+    # Sans bloc « triggering », la build se lance à la main depuis Codemagic.
+    # Décommenter pour builder à chaque tag v1.2.3 poussé :
+    # triggering:
+    #   events:
+    #     - tag
+    #   tag_patterns:
+    #     - pattern: 'v*'
+
+    scripts:
+      - name: Dépendances
+        script: flutter pub get
+
+      - name: Analyse et tests
+        script: |
+          flutter analyze
+          # Les captures de référence (goldens) sont générées sous Windows : exclues.
+          flutter test --exclude-tags screenshots
+
+      - name: Numéro de build et release Sentry
+        script: |
+          set -e
+          VERSION=$(grep '^version:' pubspec.yaml | sed -E 's/version: *//; s/\+.*//')
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || echo 0)
+          BUILD_NUMBER=$((LATEST + 1))
+          echo "Version $VERSION, build $BUILD_NUMBER"
+          echo "APP_VERSION=$VERSION" >> "$CM_ENV"
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> "$CM_ENV"
+          # Même nom de release dans l'app et pour l'envoi des symboles.
+          echo "SENTRY_RELEASE=$BUNDLE_ID@$VERSION+$BUILD_NUMBER" >> "$CM_ENV"
+          echo "SENTRY_DIST=$BUILD_NUMBER" >> "$CM_ENV"
+
+      - name: Fichier .env (Sentry)
+        script: |
+          # Seules les valeurs destinées à l'app : jamais le jeton d'API.
+          cat > .env <<EOF
+          SENTRY_DSN=${SENTRY_DSN:-}
+          SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-production}
+          SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0}
+          SENTRY_RELEASE=$SENTRY_RELEASE
+          EOF
+          if [ -z "${SENTRY_DSN:-}" ]; then
+            echo "⚠️  SENTRY_DSN vide : l'app sera construite sans Sentry."
+          fi
+
+      - name: Signature iOS
+        script: xcode-project use-profiles
+
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-name="$APP_VERSION" \
+            --build-number="$BUILD_NUMBER" \
+            --dart-define-from-file=.env \
+            --export-options-plist="$HOME/export_options.plist"
+
+      - name: Envoi des dSYM à Sentry
+        script: |
+          if [ -n "${SENTRY_AUTH_TOKEN:-}" ]; then
+            dart run sentry_dart_plugin
+          else
+            echo "SENTRY_AUTH_TOKEN absent : envoi des symboles ignoré."
+          fi
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/archive/Runner.xcarchive/dSYMs/*.dSYM
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Groupes de testeurs externes (facultatif) :
+        # beta_groups:
+        #   - Testeurs
+        submit_to_app_store: false
+      # email:
+      #   recipients:
+      #     - vous@exemple.com
+      #   notify:
+      #     success: true
+      #     failure: true

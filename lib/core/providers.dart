@@ -8,6 +8,7 @@ import '../features/focus/domain/pomodoro_engine.dart';
 import '../features/focus/domain/repositories/repositories.dart';
 import '../features/settings/data/settings_repository.dart';
 import 'config/remote_config_service.dart';
+import 'services/device_orientation_service.dart';
 import 'services/display_mode_service.dart';
 import 'services/dnd_service.dart';
 import 'services/feedback_services.dart';
@@ -62,6 +63,11 @@ final hapticsServiceProvider = Provider<HapticsService>(
 
 final displayModeServiceProvider = Provider<DisplayModeService>(
   (ref) => SystemDisplayModeService(),
+);
+
+/// Physical orientation, read from the accelerometer (the UI is portrait).
+final deviceOrientationServiceProvider = Provider<DeviceOrientationService>(
+  (ref) => SensorDeviceOrientationService(),
 );
 
 final tickSoundServiceProvider = Provider<TickSoundService>((ref) {

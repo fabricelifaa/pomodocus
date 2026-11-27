@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pomodocus/core/providers.dart';
+import 'package:pomodocus/core/services/device_orientation_service.dart';
 import 'package:pomodocus/core/services/display_mode_service.dart';
 import 'package:pomodocus/core/services/dnd_service.dart';
 import 'package:pomodocus/core/services/feedback_services.dart';
@@ -62,6 +63,7 @@ class TestDeps {
   final notifications = NoopNotificationService();
   final sound = NoopSoundService();
   final display = NoopDisplayModeService();
+  final orientation = FakeDeviceOrientationService();
   final ticks = NoopTickSoundService();
   final dnd = FakeDndService();
   final home = FakeHomeIntegrationService();
@@ -78,6 +80,7 @@ class TestDeps {
     hapticsServiceProvider.overrideWithValue(NoopHapticsService()),
     updateServiceProvider.overrideWithValue(FakeUpdateService()),
     displayModeServiceProvider.overrideWithValue(display),
+    deviceOrientationServiceProvider.overrideWithValue(orientation),
     tickSoundServiceProvider.overrideWithValue(ticks),
     dndServiceProvider.overrideWithValue(dnd),
     homeIntegrationProvider.overrideWithValue(home),
